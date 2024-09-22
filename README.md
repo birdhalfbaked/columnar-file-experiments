@@ -69,6 +69,7 @@ However, here is the list:
 ### Naive Columnar Store
 Naive files will just be a single-pass write solution with the following format
 spec
+```
 +------------------------------------------------------+
 |                                                      |
 |                         DATA                         |
@@ -80,6 +81,7 @@ spec
 | Columns [64 byte name, 4 byte type, 8 byte offset]   |
 | Metadata length uint32                               |
 +------------------------------------------------------+
+```
 
 This is not efficiently packed, nor is it optimized for compression,
 etc. but it gets the job done.
