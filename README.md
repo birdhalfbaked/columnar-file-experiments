@@ -5,7 +5,7 @@ Me messing around with some stuff. Let the dragons loose!
 
 Because I feel like it and I also was needing something to help teach some columnar formats to my team at work :D. It is pretty fun, and there's a lot of interesting ideas
 that you naturally come to when seeing implementations and the types of operations that
-happen on data files.
+happen on data files. Benchmarks also include some things like jsonl (and I probably should do CSV since that can actually be column-parallelized with benefit)
 
 ## How to use this repo
 
@@ -19,7 +19,7 @@ To run the existing benchmarks:
 2. `go run cmd/scan_file/main.go`
     * this runs the benchmark by going over a number of split processes (technically go-routines... but hey, the scheduler is pretty smart in go)
 
-This will output the following example info:
+This will currently output the following example info:
 
 ```
 Split number: 1
