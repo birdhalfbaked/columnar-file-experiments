@@ -16,47 +16,24 @@ could manipulate this to make it work with ANY data (though with the jsonnl read
 To run the existing benchmarks:
 1. `go run cmd/create_file/main.go`
     * this creates the custom file formats we want
-2. `go run cmd/scan_file/main.go`
+2. `go run cmd/scan_file/main.go [parallelReads] [numColumns]`
+    * e.g. `go run cmd/scan_file/main.go 2 3`
     * this runs the benchmark by going over a number of split processes (technically go-routines... but hey, the scheduler is pretty smart in go)
 
-This will currently output the following example info:
+Running the program `go run cmd/scan_file/main.go 3 3` will scan the file data, and will
+attempt to parallelize over 3 routines to select 3 columns. This in practice means that in
+the columnar format, each routine reads one column. This shows the power of columnar data
+stores with the speed quite readily even in the naive case.
 
 ```
-Split number: 1
+Parallel processors: 3
+Selected Columns: 3
 File type: JSON newline File
-        average time: 0.50405924
-        total time: 2.5202962
+        average time: 0.59700844
+        total time: 2.9850422
 File type: Naive Columnar File
-        average time: 0.86312088
-        total time: 4.3156044
-Split number: 2
-File type: JSON newline File
-        average time: 0.49922840000000007
-        total time: 2.4961420000000003
-File type: Naive Columnar File
-        average time: 0.5937488
-        total time: 2.968744
-Split number: 3
-File type: JSON newline File
-        average time: 0.49667472
-        total time: 2.4833736
-File type: Naive Columnar File
-        average time: 0.57459428
-        total time: 2.8729714
-Split number: 4
-File type: JSON newline File
-        average time: 0.49486613999999995
-        total time: 2.4743307
-File type: Naive Columnar File
-        average time: 0.47310418
-        total time: 2.3655209
-Split number: 5
-File type: JSON newline File
-        average time: 0.4958919
-        total time: 2.4794595
-File type: Naive Columnar File
-        average time: 0.45844801999999996
-        total time: 2.2922401
+        average time: 0.26409530000000003
+        total time: 1.3204765
 ```
 
 ## What formats are there implemented so far?

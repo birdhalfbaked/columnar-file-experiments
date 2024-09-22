@@ -36,7 +36,16 @@ func NewParallelReadProcessor(filePath string, parallelReads int) *ParallelReadP
 	}
 }
 
-func (p *ParallelReadProcessor) scanJSONNewLineFile() []*types.Record {
+func stringListContainsItem(arr []string, value string) bool {
+	for _, v := range arr {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
+
+func (p *ParallelReadProcessor) scanJSONNewLineFile(cols ...string) []*types.Record {
 	file, err := os.Open(p.filePath)
 	if err != nil {
 		slog.Error(err.Error())
@@ -63,6 +72,9 @@ func (p *ParallelReadProcessor) scanJSONNewLineFile() []*types.Record {
 		for i, col := range columns {
 			// also hack around just getting json interface to float32 and int64 without
 			// having to properly deserialize for some slight advantage to jsonl
+			if !stringListContainsItem(cols, col) {
+				continue
+			}
 			if i == 0 {
 				recData[i] = int64(data[col].(float64))
 			} else if i == 1 {
@@ -76,7 +88,7 @@ func (p *ParallelReadProcessor) scanJSONNewLineFile() []*types.Record {
 	return resultsArr
 }
 
-func (p *ParallelReadProcessor) scanNaiveFile() []*types.Record {
+func (p *ParallelReadProcessor) scanNaiveFile(cols ...string) []*types.Record {
 	file, err := naive.Open(p.filePath)
 	if err != nil {
 		slog.Error(err.Error())
@@ -89,14 +101,19 @@ func (p *ParallelReadProcessor) scanNaiveFile() []*types.Record {
 	}
 	columnSplits := make([][]string, p.parallelReads)
 	nameToIndex := make(map[string]int)
+	colsReadied := 0
 	for i := 0; i < int(colCount); i++ {
 		col := file.Metadata.Columns[i]
 		nameToIndex[col.Name()] = i
-		idx := i % p.parallelReads
+		if !stringListContainsItem(cols, col.Name()) {
+			continue
+		}
+		idx := colsReadied % p.parallelReads
 		if columnSplits[idx] == nil {
 			columnSplits[idx] = make([]string, 0)
 		}
 		columnSplits[idx] = append(columnSplits[idx], col.Name())
+		colsReadied++
 	}
 	for i := 0; i < p.parallelReads; i++ {
 		go p.scanSegment(NaiveFileStore, columnSplits[i]...)
@@ -113,15 +130,15 @@ func (p *ParallelReadProcessor) scanNaiveFile() []*types.Record {
 	return resultsArr
 }
 
-func (p *ParallelReadProcessor) Scan() []*types.Record {
+func (p *ParallelReadProcessor) Scan(cols ...string) []*types.Record {
 	// Full read into mem since this is all just for fun. In reality
 	// you would want to chunk this, but this gets into a fun topic I will
 	// sketch up later which goes into row groupings and column chunks
 	switch t := FileType(path.Ext(p.filePath)); t {
 	case NaiveFileStore:
-		return p.scanNaiveFile()
+		return p.scanNaiveFile(cols...)
 	case JSONNewLineStore:
-		return p.scanJSONNewLineFile()
+		return p.scanJSONNewLineFile(cols...)
 	}
 	return nil
 }

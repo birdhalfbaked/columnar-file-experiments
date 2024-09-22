@@ -3,6 +3,8 @@ package main
 import (
 	columnarfiles "columnarfiles/pkg"
 	"fmt"
+	"os"
+	"strconv"
 	"time"
 )
 
@@ -14,15 +16,16 @@ type ExampleStruct struct {
 	ColumnBool   bool
 }
 
-func benchmarkNaive(samples, numSplits int) {
+func benchmarkNaive(samples, numSplits, numCols int) {
 	fmt.Println("File type: Naive Columnar File")
+	cols := []string{"ColumnInt", "ColumnFloat", "ColumnFloat2", "ColumnString", "ColumnBool"}
 	processor := columnarfiles.NewParallelReadProcessor("./data/output/naive_test.naive", numSplits)
 	totalTime := 0.0
 	for i := 0; i < samples; i++ {
 		startTime := time.Now()
-		for _, record := range processor.Scan() {
+		for _, record := range processor.Scan(cols[:numCols]...) {
 			resultContainer := ExampleStruct{}
-			record.Scan(&resultContainer.ColumnInt, &resultContainer.ColumnFloat, &resultContainer.ColumnFloat2, &resultContainer.ColumnString, &resultContainer.ColumnBool)
+			record.Scan([]any{&resultContainer.ColumnInt, &resultContainer.ColumnFloat, &resultContainer.ColumnFloat2, &resultContainer.ColumnString, &resultContainer.ColumnBool}[:numCols])
 		}
 		samples--
 		totalTime += time.Since(startTime).Seconds()
@@ -31,15 +34,17 @@ func benchmarkNaive(samples, numSplits int) {
 	fmt.Println("\ttotal time:", totalTime)
 }
 
-func benchmarkJSONNewLine(samples, numSplits int) {
+func benchmarkJSONNewLine(samples, numSplits, numCols int) {
 	fmt.Println("File type: JSON newline File")
+	cols := []string{"column_int", "column_float", "column_float_2", "column_string", "column_bool"}
 	processor := columnarfiles.NewParallelReadProcessor("./data/dummy/to_load.jsonl", numSplits)
 	totalTime := 0.0
 	for i := 0; i < samples; i++ {
 		startTime := time.Now()
-		for _, record := range processor.Scan() {
+		for _, record := range processor.Scan(cols[:numCols]...) {
 			resultContainer := ExampleStruct{}
-			record.Scan(&resultContainer.ColumnInt, &resultContainer.ColumnFloat, &resultContainer.ColumnFloat2, &resultContainer.ColumnString, &resultContainer.ColumnBool)
+			record.Scan([]any{&resultContainer.ColumnInt, &resultContainer.ColumnFloat, &resultContainer.ColumnFloat2, &resultContainer.ColumnString, &resultContainer.ColumnBool}[:numCols]...)
+			// fmt.Println(resultContainer)
 		}
 		samples--
 		totalTime += time.Since(startTime).Seconds()
@@ -50,10 +55,11 @@ func benchmarkJSONNewLine(samples, numSplits int) {
 }
 
 func main() {
+	parallelProcesses, _ := strconv.Atoi(os.Args[1])
+	numColumns, _ := strconv.Atoi(os.Args[2])
 	numSamples := 10
-	for numSplits := 1; numSplits < 6; numSplits++ {
-		fmt.Println("Split number:", numSplits)
-		benchmarkJSONNewLine(numSamples, numSplits) // the benchmark :D
-		benchmarkNaive(numSamples, numSplits)
-	}
+	fmt.Println("Parallel processors:", parallelProcesses)
+	fmt.Println("Selected Columns:", numColumns)
+	benchmarkJSONNewLine(numSamples, parallelProcesses, numColumns) // the baseline benchmark :D
+	benchmarkNaive(numSamples, parallelProcesses, numColumns)
 }

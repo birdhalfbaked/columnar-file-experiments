@@ -23,6 +23,7 @@ For now we can just do the silly thing.
 package naive
 
 import (
+	"bytes"
 	"columnarfiles/pkg/types"
 	"encoding/binary"
 	"fmt"
@@ -30,6 +31,7 @@ import (
 	"log/slog"
 	"os"
 	"reflect"
+	"strings"
 )
 
 type NaiveColumn struct {
@@ -39,7 +41,7 @@ type NaiveColumn struct {
 }
 
 func (n NaiveColumn) Name() string {
-	return n.name
+	return strings.Trim(n.name, "")
 }
 func (n NaiveColumn) Type() types.ColumnType {
 	return types.ColumnType(n._type)
@@ -176,7 +178,7 @@ func DeserializeMetadata(data []byte) (*NaiveColumnarMetadata, error) {
 	for i := 0; i < int(metadata.ColumnCount); i++ {
 		offset := 16 + i*76
 		metadata.Columns[i] = &NaiveColumn{
-			name:   string(data[offset : offset+64]),
+			name:   string(bytes.Trim(data[offset:offset+64], "\x00")),
 			_type:  types.ColumnType(binary.LittleEndian.Uint32(data[offset+64 : offset+68])),
 			offset: binary.LittleEndian.Uint64(data[offset+68 : offset+76]),
 		}
