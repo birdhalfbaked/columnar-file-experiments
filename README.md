@@ -89,3 +89,58 @@ etc. but it gets the job done.
 It also has one massive limitation: can't really do nested structures.
 Well... technically you can, but nested structure striping is not imo a naive solution.
 For now we can just do the silly thing.
+
+#### Example with the test data
+
+The test data when stored in this format looks like the following:
+**Data**
+```
++------------------------------------------------------+
+|                       Data                           |
+|     [    ColumnInt            Value 1   ]            |
+|     [    ColumnInt            Value 2   ]            |
+|     [                  ...              ]            |
+|     [    ColumnInt            Value N   ]            |
+|     [    ColumnFloat          Value 1   ]            |
+|     [    ColumnFloat          Value 2   ]            |
+|     [                  ...              ]            |
+|     [    ColumnFloat          Value N   ]            |
+|     [    ColumnFloat2         Value 1   ]            |
+|     [    ColumnFloat2         Value 2   ]            |
+|     [                  ...              ]            |
+|     [    ColumnFloat2         Value N   ]            |
+|     [    ColumnString         Value 1   ]            |
+|     [    ColumnString         Value 2   ]            |
+|     [                  ...              ]            |
+|     [    ColumnString         Value N   ]            |
+|     [    ColumnBool           Value 1   ]            |
+|     [    ColumnBool           Value 2   ]            |
+|     [                  ...              ]            |
+|     [    ColumnBool           Value N   ]            |
++------------------------------------------------------+
+```
+**Metadata**
+```
++------------------------------------------------------+
+|                       Metadata                       |
+| Row count:    100000                                 |
+| Column count: 5                                      |
+| Columns:                                             |
+|   - "ColumnInt" (padded to 64 bytes)                 |
+|     Int64                                            |
+|     [first value file offset]                        |
+|   - "ColumnFloat" (padded to 64 bytes)               |
+|     Float64                                          |
+|     [first value file offset]                        |
+|   - "ColumnFloat2" (padded to 64 bytes)              |
+|     Float32                                          |
+|     [first value file offset]                        |
+|   - "ColumnString" (padded to 64 bytes)              |
+|     String                                           |
+|     [first value file offset]                        |
+|   - "ColumnBool" (padded to 64 bytes)                |
+|     Bool                                             |
+|     [first value file offset]                        |
+| Metadata length uint32                               |
++------------------------------------------------------+
+```
